@@ -1,0 +1,21 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches: [ develop ]
+    
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  job:
+
+    runs-on: macos-11
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: swift build
+    - name: Run tests
+      run: swift test --enable-test-discovery --enable-code-coverage

@@ -34,8 +34,12 @@ public struct Injector {
             Resolver.register { real() as P }
         }
     }
+    
+    public static func inject<T>(_ type: T.Type) -> T {
+        Resolver.root.resolve()
+    }
 }
 
 public func inject<T>(_ type: T.Type) -> T {
-    Resolver.root.resolve()
+    Injector.inject(type)
 }

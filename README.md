@@ -27,44 +27,16 @@
 
 ## Usage
 
-First register your dependencies.
-One advantage of registering via your first property is all your dependencies get registered before any other property gets initialized.
-
 ```swift
 import Injector
 
-struct MyApp: App {
-
-    private let injection: Void = Injector.setup {
-        $0.register(Person(), mock: Person_Mock(), for: PersonType.self)
-        $0.register(Cat(), mock: Cat_Mock(), for: CatType.self)
-    }
-
-    // OR
-
-    init() {
-        Injector.setup {
-            $0.register(Person(), mock: Person_Mock(), for: PersonType.self)
-            $0.register(Cat(), mock: Cat_Mock(), for: CatType.self)
-        }
-    }
+Injector.setup {
+    $0.register(Person(), mock: Person_Mock(), for: PersonType.self)
+    $0.register(Cat(), mock: Cat_Mock(), for: CatType.self)
 }
-```
 
-Your can now inject the dependency wherever you'd like
-
-```swift
-import Injector
-
-struct House {
-    private let person = inject(PersonType.self)
-
-    // OR
-
-    func openDoor() {
-        let person = inject(PersonType.self)
-    }
-}
+let person = inject(PersonType.self)
+let cat = inject(CatType.self)
 ```
 
 ## Why should my main app contain the mocks?

@@ -30,6 +30,7 @@
 ```swift
 import Injector
 
+// AppDelegate or App (SwiftUI)
 Injector.setup {
     $0.register(Person(), mock: Person_Mock(), for: PersonType.self)
     $0.register(Cat(), mock: Cat_Mock(), for: CatType.self)

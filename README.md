@@ -35,8 +35,13 @@ Injector.setup {
     $0.register(Cat(), mock: Cat_Mock(), for: CatType.self)
 }
 
-let person = inject(PersonType.self)
-let cat = inject(CatType.self)
+// App
+let person = inject(PersonType.self) // Person
+let cat = inject(CatType.self) // Cat
+
+// Unit Test or SwiftUI Preview
+let person = inject(PersonType.self) // Person_Mock
+let cat = inject(CatType.self) // Cat_Mock
 ```
 
 ## Why should my main app contain the mocks?

@@ -20,7 +20,7 @@ public enum Environment {
 
 public struct Injector {
     
-    static func setup(_ handler: (Injector) -> ()) {
+    public static func setup(_ handler: (Injector) -> ()) {
         Resolver.reset()
         Resolver.defaultScope = .application
         handler(Injector())

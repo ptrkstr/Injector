@@ -20,23 +20,25 @@ public enum Environment {
 
 public struct Injector {
     
+    private static let resolver = Resolver()
+    private static let cache = ResolverScopeCache()
+    
     public static func setup(_ handler: (Injector) -> ()) {
-        Resolver.reset()
-        Resolver.defaultScope = .application
+        cache.reset()
         handler(Injector())
     }
     
     public func register<P>(_ real: @escaping @autoclosure () -> P, mock: @escaping @autoclosure () -> P, for p: P.Type, environment: Environment = .resolve) {
         switch environment {
         case .unitTest, .swiftUIPreview:
-            Resolver.register { mock() as P }
+            Self.resolver.register { mock() as P }.scope(Self.cache)
         case .real:
-            Resolver.register { real() as P }
+            Self.resolver.register { real() as P }.scope(Self.cache)
         }
     }
     
     public static func inject<T>(_ type: T.Type) -> T {
-        Resolver.root.resolve()
+        resolver.resolve()
     }
 }
 

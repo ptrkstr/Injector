@@ -6,16 +6,19 @@ public enum Environment {
         let process = ProcessInfo.processInfo
         if process.environment["XCTestConfigurationFilePath"] != nil || NSClassFromString("XCTest") != nil {
             return .unitTest
+        } else if process.arguments.contains("-ui_testing") {
+            return .uiTest
         } else if process.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return .swiftUIPreview
         } else {
-            return .real
+            return .live
         }
     }
     
     case unitTest
+    case uiTest
     case swiftUIPreview
-    case real
+    case live
 }
 
 public struct Injector {
@@ -28,12 +31,31 @@ public struct Injector {
         handler(Injector())
     }
     
-    public func register<P>(_ real: @escaping @autoclosure () -> P, mock: @escaping @autoclosure () -> P, for p: P.Type, environment: Environment = .resolve) {
+    public func register<P>(
+        _ live: @escaping @autoclosure () -> P,
+        unitTest: @escaping @autoclosure () -> P,
+        uiTest: (() -> P)? = nil,
+        swiftUIPreview: (() -> P)? = nil,
+        for p: P.Type,
+        environment: Environment = .resolve) {
         switch environment {
-        case .unitTest, .swiftUIPreview:
-            Self.resolver.register { mock() as P }.scope(Self.cache)
-        case .real:
-            Self.resolver.register { real() as P }.scope(Self.cache)
+        case .unitTest:
+            Self.resolver.register { unitTest() as P }.scope(Self.cache)
+        case .uiTest:
+            if let uiTest = uiTest {
+                Self.resolver.register { uiTest() as P }.scope(Self.cache)
+            } else {
+                Self.resolver.register { unitTest() as P }.scope(Self.cache)
+            }
+        case .swiftUIPreview:
+            if let swiftUIPreview = swiftUIPreview {
+                Self.resolver.register { swiftUIPreview() as P }.scope(Self.cache)
+            } else {
+                Self.resolver.register { unitTest() as P }.scope(Self.cache)
+            }
+//            Self.resolver.register { unitTest() as P }.scope(Self.cache)
+        case .live:
+            Self.resolver.register { live() as P }.scope(Self.cache)
         }
     }
     

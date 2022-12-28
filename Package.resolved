@@ -2,12 +2,12 @@
   "object": {
     "pins": [
       {
-        "package": "Resolver",
-        "repositoryURL": "https://github.com/hmlongco/Resolver.git",
+        "package": "Factory",
+        "repositoryURL": "https://github.com/hmlongco/Factory.git",
         "state": {
           "branch": null,
-          "revision": "97de0b0320036607564af4a60025b48f8d041221",
-          "version": "1.5.0"
+          "revision": "ca5788b8621b185a0fbe6ef05bb9a73b3ef2833f",
+          "version": "1.2.9"
         }
       }
     ]

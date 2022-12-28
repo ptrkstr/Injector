@@ -1,47 +1,128 @@
 import Foundation
-import Resolver
+import Factory
 
 public enum Environment {
     public static var resolve: Environment {
         let process = ProcessInfo.processInfo
         if process.environment["XCTestConfigurationFilePath"] != nil || NSClassFromString("XCTest") != nil {
             return .unitTest
+        } else if process.arguments.contains("-ui_testing") {
+            return .uiTest
         } else if process.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return .swiftUIPreview
         } else {
             return .real
         }
     }
-    
+
     case unitTest
+    case uiTest
     case swiftUIPreview
     case real
 }
 
-public struct Injector {
-    
-    private static let resolver = Resolver()
-    private static let cache = ResolverScopeCache()
-    
-    public static func setup(_ handler: (Injector) -> ()) {
-        cache.reset()
-        handler(Injector())
-    }
-    
-    public func register<P>(_ real: @escaping @autoclosure () -> P, mock: @escaping @autoclosure () -> P, for p: P.Type, environment: Environment = .resolve) {
-        switch environment {
-        case .unitTest, .swiftUIPreview:
-            Self.resolver.register { mock() as P }.scope(Self.cache)
-        case .real:
-            Self.resolver.register { real() as P }.scope(Self.cache)
-        }
-    }
-    
-    public static func inject<T>(_ type: T.Type) -> T {
-        resolver.resolve()
+public enum Syringe {
+    /// Removes all dependency registrations.
+    public static func clean() {
+        Container.Scope.cache.reset()
     }
 }
 
-public func inject<T>(_ type: T.Type) -> T {
-    Injector.inject(type)
+private extension Container.Scope {
+    static let cache = Cached()
+}
+
+public struct Medicine<T> {
+
+    private let factory: Factory<T>
+
+    /// Creates a `Medicine`.
+    /// - Parameters:
+    ///   - real: The real instance of `T`.
+    ///   - mock: Used for unit tests, ui tests and SwiftUI previews.
+    ///   - environment: The current `Environment`. Most cases you'll want to let it resolve itself.
+    public init(
+        _ real: @escaping @autoclosure () -> T,
+        environment: Environment = .resolve
+    ) {
+        self.init(real(), unitTests: real(), uiTests: real(), swiftUIPreview: real(), environment: environment)
+    }
+
+    /// Creates a `Medicine`.
+    /// - Parameters:
+    ///   - real: The real instance of `T`.
+    ///   - mock: Used for unit tests, ui tests and SwiftUI previews.
+    ///   - environment: The current `Environment`. Most cases you'll want to let it resolve itself.
+    public init(
+        _ real: @escaping @autoclosure () -> T,
+        mock: @escaping @autoclosure () -> T,
+        environment: Environment = .resolve
+    ) {
+        self.init(real(), unitTests: mock(), uiTests: mock(), swiftUIPreview: mock(), environment: environment)
+    }
+
+    /// Creates a `Medicine`.
+    /// - Parameters:
+    ///   - real: The real instance of `T`.
+    ///   - tests: Used for unit tests and ui tests.
+    ///   - swiftUIPreview: Used for SwiftUI previews.
+    ///   - environment: The current `Environment`. Most cases you'll want to let it resolve itself.
+    public init(
+        _ real: @escaping @autoclosure () -> T,
+        tests: @escaping @autoclosure () -> T,
+        swiftUIPreview: @escaping @autoclosure () -> T,
+        environment: Environment = .resolve
+    ) {
+        self.init(real(), unitTests: tests(), uiTests: tests(), swiftUIPreview: swiftUIPreview(), environment: environment)
+    }
+
+    /// Creates a `Medicine`.
+    /// - Parameters:
+    ///   - real: The real instance of `T`.
+    ///   - unitTests: Used for unit tests.
+    ///   - uiTests: Used for ui tests.
+    ///   - swiftUIPreview: Used for SwiftUI previews.
+    ///   - environment: The current `Environment`. Most cases you'll want to let it resolve itself.
+    public init(
+        _ real: @escaping @autoclosure () -> T,
+        unitTests: @escaping @autoclosure () -> T,
+        uiTests: @escaping @autoclosure () -> T,
+        swiftUIPreview: @escaping @autoclosure () -> T,
+        environment: Environment = .resolve
+    ) {
+        factory = {
+            switch environment {
+            case .unitTest:
+                return .init(scope: .cache, factory: unitTests)
+            case .uiTest:
+                return .init(scope: .cache, factory: uiTests)
+            case .swiftUIPreview:
+                return .init(scope: .cache, factory: swiftUIPreview)
+            case .real:
+                return .init(scope: .cache, factory: real)
+            }
+        }()
+    }
+
+    /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached.
+    public func inject() -> T {
+        callAsFunction()
+    }
+
+    /// Resolves and returns an instance of the desired object type. This may be a new instance or one that was created previously and then cached.
+    public func callAsFunction() -> T {
+        factory()
+    }
+}
+
+@propertyWrapper
+public struct Inject<T> {
+    private var dependency: T
+    public init(_ medicine: Medicine<T>) {
+        self.dependency = medicine()
+    }
+    public var wrappedValue: T {
+        get { return dependency }
+        mutating set { dependency = newValue }
+    }
 }

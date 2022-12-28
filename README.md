@@ -20,40 +20,50 @@
 
 ## Features
 
-- ✅ Tiny footprint (`Injector.swift` and `Resolver.swift` are the only source files).
-- ✅ Supports SwiftUI previews.
-- ✅ Great unit tests.
+- :white_check_mark: Built upon the amazing [Factory](https://github.com/hmlongco/Factory)
+- ✅ Tiny footprint (`Injector.swift` and `Factory.swift` are the only source files).
+- ✅ Built for mocking in UnitTests, UITests and SwiftUI previews.
+- ✅ Unit Tested.
 - ✅ Cool logo.
 
 ## Usage
 
+Injector uses the concept of a **syringe**:
+
 ```swift
-import Injector
+extension Syringe {
 
-// AppDelegate or App (SwiftUI)
-Injector.setup {
-    $0.register(Person(), mock: Person_Mock(), for: PersonType.self)
-    $0.register(Cat(), mock: Cat_Mock(), for: CatType.self)
 }
-
-// App
-let person = inject(PersonType.self) // Person
-let cat = inject(CatType.self) // Cat
-
-// Unit Test or SwiftUI Preview
-let person = inject(PersonType.self) // Person_Mock
-let cat = inject(CatType.self) // Cat_Mock
 ```
 
-## Why should my main app contain the mocks?
+Filled with **medicine**:
 
-This is so mocks can be used in SwiftUI previews. I couldn't find an alternative way but would be glad to hear it if you had one.
+```swift
+extension Syringe {
+  static let person = Medicine<PersonType>(Person(), mock: Person_Mock())
+  static let dog = Medicine<DogType>(Dog(), mock: Dog_Mock())
+}
+```
+
+And at runtime **injected**:
+
+```swift
+let person = Syringe.person.inject()
+// or
+let person = Syringe.person()
+// or
+@Inject(Syringe.person) var person
+```
+
+Performing a **clean** will reset the instances:
+
+```swif
+Syringe.clean()
+```
 
 ## Installation
 
 ### SPM
-
-Add the following to your project:  
 
 ```
 https://github.com/ptrkstr/injector

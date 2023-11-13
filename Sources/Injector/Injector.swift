@@ -1,8 +1,8 @@
 import Foundation
 import Factory
 
-public enum Environment {
-    public static var resolve: Environment {
+public enum InjectorEnvironment {
+    public static var resolve: InjectorEnvironment {
         let process = ProcessInfo.processInfo
         if process.environment["XCTestConfigurationFilePath"] != nil || NSClassFromString("XCTest") != nil {
             return .unitTest
@@ -43,7 +43,7 @@ public struct Medicine<T> {
     ///   - environment: The current `Environment`. Most cases you'll want to let it resolve itself.
     public init(
         _ real: @escaping @autoclosure () -> T,
-        environment: Environment = .resolve
+        environment: InjectorEnvironment = .resolve
     ) {
         self.init(real(), unitTests: real(), uiTests: real(), swiftUIPreview: real(), environment: environment)
     }
@@ -56,7 +56,7 @@ public struct Medicine<T> {
     public init(
         _ real: @escaping @autoclosure () -> T,
         mock: @escaping @autoclosure () -> T,
-        environment: Environment = .resolve
+        environment: InjectorEnvironment = .resolve
     ) {
         self.init(real(), unitTests: mock(), uiTests: mock(), swiftUIPreview: mock(), environment: environment)
     }
@@ -71,7 +71,7 @@ public struct Medicine<T> {
         _ real: @escaping @autoclosure () -> T,
         tests: @escaping @autoclosure () -> T,
         swiftUIPreview: @escaping @autoclosure () -> T,
-        environment: Environment = .resolve
+        environment: InjectorEnvironment = .resolve
     ) {
         self.init(real(), unitTests: tests(), uiTests: tests(), swiftUIPreview: swiftUIPreview(), environment: environment)
     }
@@ -88,7 +88,7 @@ public struct Medicine<T> {
         unitTests: @escaping @autoclosure () -> T,
         uiTests: @escaping @autoclosure () -> T,
         swiftUIPreview: @escaping @autoclosure () -> T,
-        environment: Environment = .resolve
+        environment: InjectorEnvironment = .resolve
     ) {
         factory = {
             switch environment {

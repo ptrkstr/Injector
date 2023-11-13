@@ -40,8 +40,16 @@ Filled with **medicine**:
 
 ```swift
 extension Syringe {
+  // Same mock for all environments
   static let person = Medicine<PersonType>(Person(), mock: Person_Mock())
-  static let dog = Medicine<DogType>(Dog(), mock: Dog_Mock())
+  // Unique mock for all environments
+  static let cat = Medicine<CatType>(
+      Cat(), 
+      unitTests: Cat_Mock("Mary"), 
+      uiTests: Cat_Mock("Sam"), 
+      swiftUIPreview: Cat_Mock("Kerry")
+  )
+  // See Medicine initializer for all combinations
 }
 ```
 
